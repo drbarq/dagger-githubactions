@@ -27,6 +27,8 @@ jobs:
       - name: Install Doppler CLI
         run: |
           curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/install.sh' | sudo sh
+          which doppler || echo "Doppler not in PATH"
+          doppler --version || echo "Doppler command failed"
 
       - name: Fetch secrets from Doppler
         env:
