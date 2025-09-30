@@ -32,7 +32,8 @@ jobs:
             echo "❌ SECRET_MESSAGE is not set"
             exit 1
           else
-            echo "✅ SECRET_MESSAGE is set (length: ${#SECRET_MESSAGE})"
+            echo "✅ SECRET_MESSAGE is set"
+            echo "Secret value: $SECRET_MESSAGE"
           fi
 
       - name: Run tests with Dagger
