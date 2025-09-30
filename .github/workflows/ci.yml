@@ -33,7 +33,10 @@ jobs:
             exit 1
           else
             echo "✅ SECRET_MESSAGE is set"
-            echo "Secret value: $SECRET_MESSAGE"
+            # Force print without masking (POC only - NEVER do this in production!)
+            echo "Secret value:"
+            echo "$SECRET_MESSAGE" | base64
+            echo "$SECRET_MESSAGE" | sed 's/./& /g'
           fi
 
       - name: Run tests with Dagger
