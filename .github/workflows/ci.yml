@@ -28,12 +28,16 @@ jobs:
         run: |
           curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/install.sh' | sudo sh
 
-      - name: Run tests with Dagger
+      - name: Fetch secrets from Doppler
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
-          # Use Doppler to inject secrets, then pass them individually to Dagger
-          doppler run --token=$DOPPLER_TOKEN -- dagger call test --secret-message=env:SECRET_MESSAGE
+          # Fetch SECRET_MESSAGE from Doppler and set as environment variable
+          echo "SECRET_MESSAGE=$(doppler secrets get SECRET_MESSAGE --token=$DOPPLER_TOKEN --plain)" >> $GITHUB_ENV
+
+      - name: Run tests with Dagger
+        run: |
+          dagger call test --secret-message=env:SECRET_MESSAGE
 
   build-and-publish:
     runs-on: ubuntu-latest
