@@ -10,6 +10,59 @@ This project demonstrates:
 - GitHub Actions workflow using the same Dagger commands
 - Secrets managed through Doppler in both environments
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Doppler["Doppler (Secrets Management)"]
+        DopplerSecrets[("SECRET_MESSAGE<br/>+ Other Secrets")]
+    end
+
+    subgraph Local["Local Development"]
+        DopplerCLI["Doppler CLI<br/>(doppler run)"]
+        DaggerLocal["Dagger Pipeline<br/>(build, test)"]
+        FlaskLocal["Flask App<br/>(port 5001)"]
+
+        DopplerCLI -->|injects secrets<br/>as env vars| DaggerLocal
+        DopplerCLI -->|injects secrets<br/>as env vars| FlaskLocal
+    end
+
+    subgraph GitHub["GitHub Actions (CI/CD)"]
+        GHSecrets["GitHub Secrets<br/>(auto-synced)"]
+        GHWorkflow["CI Workflow<br/>(.github/workflows/ci.yml)"]
+        DaggerCI["Dagger Pipeline<br/>(same code!)"]
+
+        GHSecrets -->|provides secrets<br/>as env vars| GHWorkflow
+        GHWorkflow -->|runs| DaggerCI
+    end
+
+    subgraph Pipeline["Dagger Module (.dagger/src/nine/main.py)"]
+        Build["@function build()"]
+        Test["@function test()"]
+        Publish["@function publish()"]
+
+        Build --> Test
+        Test --> Publish
+    end
+
+    DopplerSecrets -->|doppler login<br/>doppler setup| DopplerCLI
+    DopplerSecrets -->|GitHub Integration<br/>(automatic sync)| GHSecrets
+
+    DaggerLocal -.->|uses same code| Pipeline
+    DaggerCI -.->|uses same code| Pipeline
+
+    style Doppler fill:#4a90e2
+    style Local fill:#90ee90
+    style GitHub fill:#ffa07a
+    style Pipeline fill:#dda0dd
+```
+
+**Key Points:**
+- **One Pipeline, Two Environments**: The same Dagger code runs locally and in CI
+- **Doppler Integration**: Local uses CLI, CI uses GitHub Actions integration (automatic sync)
+- **No Secrets in Code**: All secrets flow from Doppler → Environment Variables → Dagger
+- **Identical Commands**: `dagger call test` works the same everywhere
+
 ## Prerequisites
 
 1. **Python 3.11+**
@@ -116,15 +169,6 @@ The response will show:
 Press `Ctrl+C` to stop the app.
 
 **Note:** This runs the app directly on your machine (not in a Dagger container). The Dagger pipeline is used for build/test/publish in CI/CD, demonstrated by the `build` and `test` commands above.
-
-### Publish to a container registry
-```bash
-dagger call publish \
-  --registry="docker.io/yourusername" \
-  --username="yourusername" \
-  --password=env:REGISTRY_PASSWORD \
-  --tag="latest"
-```
 
 ## GitHub Actions Setup
 
