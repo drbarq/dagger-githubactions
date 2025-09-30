@@ -24,6 +24,17 @@ jobs:
           cd /usr/local
           curl -L https://dl.dagger.io/dagger/install.sh | sh
 
+      - name: Verify secret is available
+        env:
+          SECRET_MESSAGE: ${{ secrets.SECRET_MESSAGE }}
+        run: |
+          if [ -z "$SECRET_MESSAGE" ]; then
+            echo "❌ SECRET_MESSAGE is not set"
+            exit 1
+          else
+            echo "✅ SECRET_MESSAGE is set (length: ${#SECRET_MESSAGE})"
+          fi
+
       - name: Run tests with Dagger
         env:
           SECRET_MESSAGE: ${{ secrets.SECRET_MESSAGE }}
