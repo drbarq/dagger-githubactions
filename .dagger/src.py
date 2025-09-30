@@ -14,11 +14,14 @@ class Nine:
         """
         Build the application container with dependencies installed.
         """
+        # Get files from host workdir (where dagger command is run)
         return (
             dag.container()
             .from_("python:3.11-slim")
-            .with_directory("/app", dag.host().directory(".", exclude=[".git", "__pycache__", "*.pyc", ".pytest_cache"]))
             .with_workdir("/app")
+            .with_file("/app/requirements.txt", dag.host().workdir().file("requirements.txt"))
+            .with_file("/app/app.py", dag.host().workdir().file("app.py"))
+            .with_file("/app/test_app.py", dag.host().workdir().file("test_app.py"))
             .with_exec(["pip", "install", "-r", "requirements.txt"])
         )
 

@@ -56,10 +56,16 @@ This project demonstrates:
    cd nine
    ```
 
-2. **Install Python dependencies**
+2. **Set up Python virtual environment**
    ```bash
+   # Create virtual environment
+   python3 -m venv venv
+
+   # Activate it
+   source venv/bin/activate
+
+   # Install all dependencies (including dagger-io)
    pip install -r requirements.txt
-   pip install dagger-io
    ```
 
 3. **Authenticate with Doppler**
@@ -90,11 +96,26 @@ doppler run -- dagger call test --secret-message=env:SECRET_MESSAGE
 This runs tests with `SECRET_MESSAGE` injected from Doppler. The secret never touches disk!
 
 ### Run the app locally (with Doppler secrets)
+
+For local development, run the Flask app directly with Doppler:
+
 ```bash
-doppler run -- dagger call run-local --secret-message=env:SECRET_MESSAGE up
+doppler run -- python app.py
 ```
 
-Then visit `http://localhost:5000` to see the app with secrets loaded from Doppler.
+Then visit `http://localhost:5001` in your browser.
+
+The response will show:
+```json
+{
+  "message": "Hello, World!",
+  "secret": "your-secret-from-doppler"
+}
+```
+
+Press `Ctrl+C` to stop the app.
+
+**Note:** This runs the app directly on your machine (not in a Dagger container). The Dagger pipeline is used for build/test/publish in CI/CD, demonstrated by the `build` and `test` commands above.
 
 ### Publish to a container registry
 ```bash
@@ -107,46 +128,70 @@ dagger call publish \
 
 ## GitHub Actions Setup
 
-1. **Add GitHub Secrets**
+### Option 1: Doppler GitHub Integration (Recommended)
 
-   Go to your repository settings → Secrets and variables → Actions, and add:
+Doppler has a native GitHub Actions integration that automatically syncs secrets without manual token management.
 
-   - `DOPPLER_TOKEN` - Your Doppler service token
-   - `REGISTRY_USERNAME` - Container registry username (optional, for publishing)
-   - `REGISTRY_PASSWORD` - Container registry password (optional, for publishing)
-   - `REGISTRY` - Container registry URL (optional, defaults to docker.io/username)
+1. **Set up Doppler GitHub Integration**
+   - In Doppler dashboard, go to your project → Integrations
+   - Add a new "GitHub Actions" integration
+   - Connect your GitHub repository
+   - Select which config (dev/staging/prod) to sync
+   - Doppler will create a `DOPPLER_TOKEN` secret in your GitHub repository automatically
 
-2. **Push to GitHub**
+2. **Add additional GitHub Secrets** (if needed for publishing)
+   - Go to your repository settings → Secrets and variables → Actions
+   - Add:
+     - `REGISTRY_USERNAME` - Container registry username (optional)
+     - `REGISTRY_PASSWORD` - Container registry password (optional)
+     - `REGISTRY` - Container registry URL (optional, defaults to docker.io/username)
+
+3. **Push to GitHub**
    ```bash
    git add .
    git commit -m "Add Dagger + Doppler CI/CD pipeline"
    git push origin main
    ```
 
-3. **View the workflow**
+4. **View the workflow**
    - Go to the Actions tab in your GitHub repository
    - The workflow will run automatically on push and pull requests
    - The same `dagger call` commands run in CI as you use locally
+
+### Option 2: Manual Service Token
+
+If you prefer not to use the integration:
+
+1. Generate a Doppler service token in your project settings
+2. Add it as `DOPPLER_TOKEN` in GitHub Actions secrets manually
+3. Continue with steps 2-4 above
 
 ## Project Structure
 
 ```
 nine/
-├── app.py                 # Simple Flask app that uses Doppler secrets
-├── test_app.py           # Unit tests for the app
-├── requirements.txt      # Python dependencies
-├── dagger.py            # Dagger pipeline functions (build, test, publish)
-├── pyproject.toml       # Project configuration for Dagger
+├── app.py                      # Simple Flask app that uses Doppler secrets
+├── test_app.py                 # Unit tests for the app
+├── requirements.txt            # Python dependencies
+├── .dagger/                    # Dagger module directory
+│   ├── app.py                  # Copy of app for Dagger (synced)
+│   ├── test_app.py             # Copy of tests for Dagger (synced)
+│   ├── requirements.txt        # Copy of requirements for Dagger (synced)
+│   └── src/
+│       └── nine/
+│           └── main.py         # Dagger pipeline functions (build, test, publish)
 ├── .github/
 │   └── workflows/
-│       └── ci.yml       # GitHub Actions workflow using Dagger
-└── README.md            # This file
+│       └── ci.yml              # GitHub Actions workflow using Dagger
+└── README.md                   # This file
 ```
+
+**Note:** The application files (app.py, test_app.py, requirements.txt) are copied into `.dagger/` so the Dagger pipeline can access them. When you modify these files, remember to copy them to `.dagger/` as well.
 
 ## Key Features
 
 ### 🔄 Same Code Everywhere
-The Dagger pipeline code in `dagger.py` runs identically:
+The Dagger pipeline code in `.dagger/src/nine/main.py` runs identically:
 - On your laptop
 - In CI (GitHub Actions)
 - On any team member's machine
