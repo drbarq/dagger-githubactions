@@ -14,42 +14,42 @@ This project demonstrates:
 
 ```mermaid
 flowchart TB
-    subgraph Doppler["Doppler (Secrets Management)"]
-        DopplerSecrets[("SECRET_MESSAGE<br/>+ Other Secrets")]
+    subgraph Doppler["Doppler - Secrets Management"]
+        DopplerSecrets[("SECRET_MESSAGE<br/>and Other Secrets")]
     end
 
     subgraph Local["Local Development"]
-        DopplerCLI["Doppler CLI<br/>(doppler run)"]
-        DaggerLocal["Dagger Pipeline<br/>(build, test)"]
-        FlaskLocal["Flask App<br/>(port 5001)"]
+        DopplerCLI["Doppler CLI<br/>doppler run"]
+        DaggerLocal["Dagger Pipeline<br/>build, test"]
+        FlaskLocal["Flask App<br/>port 5001"]
 
-        DopplerCLI -->|injects secrets<br/>as env vars| DaggerLocal
-        DopplerCLI -->|injects secrets<br/>as env vars| FlaskLocal
+        DopplerCLI -->|"injects secrets as env vars"| DaggerLocal
+        DopplerCLI -->|"injects secrets as env vars"| FlaskLocal
     end
 
-    subgraph GitHub["GitHub Actions (CI/CD)"]
-        GHSecrets["GitHub Secrets<br/>(auto-synced)"]
-        GHWorkflow["CI Workflow<br/>(.github/workflows/ci.yml)"]
-        DaggerCI["Dagger Pipeline<br/>(same code!)"]
+    subgraph GitHub["GitHub Actions - CI/CD"]
+        GHSecrets["GitHub Secrets<br/>auto-synced"]
+        GHWorkflow["CI Workflow<br/>ci.yml"]
+        DaggerCI["Dagger Pipeline<br/>same code!"]
 
-        GHSecrets -->|provides secrets<br/>as env vars| GHWorkflow
+        GHSecrets -->|"provides secrets as env vars"| GHWorkflow
         GHWorkflow -->|runs| DaggerCI
     end
 
-    subgraph Pipeline["Dagger Module (.dagger/src/nine/main.py)"]
-        Build["@function build()"]
-        Test["@function test()"]
-        Publish["@function publish()"]
+    subgraph Pipeline["Dagger Module - main.py"]
+        Build["@function build"]
+        Test["@function test"]
+        Publish["@function publish"]
 
         Build --> Test
         Test --> Publish
     end
 
-    DopplerSecrets -->|doppler login<br/>doppler setup| DopplerCLI
-    DopplerSecrets -->|GitHub Integration<br/>(automatic sync)| GHSecrets
+    DopplerSecrets -->|"doppler login + setup"| DopplerCLI
+    DopplerSecrets -->|"GitHub Integration - automatic sync"| GHSecrets
 
-    DaggerLocal -.->|uses same code| Pipeline
-    DaggerCI -.->|uses same code| Pipeline
+    DaggerLocal -.->|"uses same code"| Pipeline
+    DaggerCI -.->|"uses same code"| Pipeline
 
     style Doppler fill:#4a90e2
     style Local fill:#90ee90
