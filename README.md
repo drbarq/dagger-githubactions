@@ -172,16 +172,18 @@ Press `Ctrl+C` to stop the app.
 
 ## GitHub Actions Setup
 
-### Option 1: Doppler GitHub Integration (Recommended)
+### Set up Doppler GitHub Integration
 
-Doppler has a native GitHub Actions integration that automatically syncs secrets without manual token management.
+Doppler has a native GitHub Actions integration that automatically syncs all your secrets to GitHub Actions - no Doppler CLI or service tokens needed in CI.
 
 1. **Set up Doppler GitHub Integration**
    - In Doppler dashboard, go to your project → Integrations
    - Add a new "GitHub Actions" integration
    - Connect your GitHub repository
    - Select which config (dev/staging/prod) to sync
-   - Doppler will create a `DOPPLER_TOKEN` secret in your GitHub repository automatically
+   - Doppler will automatically sync ALL secrets from your selected config directly to GitHub Actions secrets
+   - Each secret becomes available in workflows: `SECRET_MESSAGE` → `${{ secrets.SECRET_MESSAGE }}`
+   - Updates in Doppler automatically sync to GitHub (no manual token management needed)
 
 2. **Add additional GitHub Secrets** (if needed for publishing)
    - Go to your repository settings → Secrets and variables → Actions
